@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>
+    Random Dot Motion Task
+  </title>
+  <style>
+    body{
+      margin: 0;
+      overflow: hidden;
+      height: 100%;
+    }
+    .container{
+      width: 820px;
+      margin: auto auto;
+      font-family: sans-serif;
+    }
+    p{
+      align: left;
+      font-size: 1.1em;
+    }
+    #note{
+      align: left;
+      font-size: 80%;
+      font-style: italic;
+      margin-bottom: 100px;
+      margin-top: 30px;
+    }
+    input{ 
+        padding: 9px; 
+        border: solid 1px #E5E5E5; 
+        outline: 0; 
+        font: normal 13px/100% Verdana, Tahoma, sans-serif; 
+        width: 200px; 
+        background: #FFFFFF url('bg_form.png') left top repeat-x; 
+        background: -webkit-gradient(linear, left top, left 25, from(#FFFFFF), color-stop(4%, #EEEEEE), to(#FFFFFF)); 
+        background: -moz-linear-gradient(top, #FFFFFF, #EEEEEE 1px, #FFFFFF 25px); 
+        box-shadow: rgba(0,0,0, 0.1) 0px 0px 8px; 
+      } 
+    .form label{ 
+        margin-left: 10px; 
+        color: #000000;
+    } 
+    button{
+        font-size: 12pt;
+        width: 200px;
+        height: 50px;
+        margin: 20px auto 20px auto;
+        padding: 0 20px;
+        background: #BFF58F;
+        border-radius: 5px;
+        border: none;
+      }
+  </style>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+    ga('create', 'UA-80718454-1', 'auto');
+    ga('send', 'pageview');
+  </script>
+  <script src="https://code.jquery.com/jquery-1.10.2.js"></script>
+  <script type="text/javascript" src="http://dsambrano.com/demos/paper.js"></script>
+  <script type="text/javascript"> 
+    var count = 600;
+    var size = 2.5; 
+    var RT;    
+    var response;
+    var data = [];
+    //Direction: -1 for left, 1 for right
+    var RL = 1;
+    var coherence = .15;
+    var speed = 10;
+    var RL_List = [-1,1];
+    var coherence_List = [.05, .1, .15, .2, .25, .3, .35, .4, .45, .5, .55,.6, .65, .7, .75, .8, .95];
+    function shuffling(array) {
+      var currentIndex = array.length, temporaryValue, randomIndex;
+      while (0 !== currentIndex) {
+        randomIndex = Math.floor(Math.random() * currentIndex);
+        currentIndex -= 1;
+        temporaryValue = array[currentIndex];
+        array[currentIndex] = array[randomIndex];
+        array[randomIndex] = temporaryValue;
+      }
+      return array;
+    }
+    function nextTrial() {
+      RL = shuffling(RL_List)[0];
+      coherence = shuffling(coherence_List)[1];
+    }
+  </script> 
+  <script>
+    var startTime = 0;
+    $(function(){
+      $("#ready").hide();
+      $("#Canvas").hide();
+      $("#Correct").hide();
+      $("#Incorrect").hide();
+    });
+    var BeginDemo = function() {
+      RDM();
+    }
+    var trial_num = [0];
+    var RDM = function(){
+      var Name = document.getElementById("name").value;
+      var Email = document.getElementById("email").value;
+      var Contact = document.getElementById("contact").value;
+      data.push([Name, Email, Contact]);
+      data.push(['RL',"coherence", "RT"]);
+      $("#Canvas").show();
+      $("#Instructions").hide();
+      $("#details").hide();
+      $("#StartTrial").hide();
+      $("#Correct").hide();
+      $("#Incorrect").hide();
+      $("#ready").show();  
+      startTime = (new Date()).getTime(); 
+      nextTrial();
+      console.log(RL);
+      console.log(coherence);
+      paper.install(window);
+      if (trial_num > 0) {
+        console.log(paper.project);
+        console.log(paper.project.layers);
+      }
+      trial_num += 1
+      $(document).on('click', '#ready', function stimuli() {
+        $("#ready").hide();
+        var nums = [];
+        for (var i = 0; i < count; i++) {
+           nums.push(i);
+        }
+        shuffling(nums);
+        var First = nums.slice(0, 200);
+        var Second = nums.slice(200, 400);
+        var Third = nums.slice(400, 600);
+        var full = [First,Second,Third]; 
+        paper.setup('Canvas');
+        var path = new Path.Circle([view.size.width*Math.random(),view.size.height*Math.random()], size);
+        path.fillColor = 'black';
+        var symbol = new Symbol(path);
+        for (var i = 0; i < count; i++) {
+          var center = [view.size.width*Math.random(),view.size.height*Math.random()];
+          symbol.place(center);
+        }
+        var even = 0;
+        view.onFrame = function(event) {
+          even ++;
+          if(even%2 === 0){
+            for (var i = 0; i < full.length; i++) {
+              for (var j = 0; j < full[i].length; j++){
+                shuffling(full[i]);
+                var current = full[i][j];
+                console.log(current);
+                var item = project.activeLayer.children[current];
+                if (j < (count/3)*coherence) {
+                  item.position.x += (.5)*RL;
+                } else {
+                  item.position.x = view.size.width*Math.random();
+                  item.position.y = view.size.height*Math.random();
+                }
+                if (item.bounds.left > view.size.width*1.1) {
+                  item.position.x = +item.bounds.width;
+                }
+                if (item.bounds.right < 0) {
+                  item.position.x = +view.size.width;
+                }
+              }
+            }
+          }
+        }
+        paper.view.draw();
+      })
+    };
+    $(document).on('keydown', function(e){
+      if (e.which == 90 || e.which == 77){ 
+        if ($("#ready").is(':visible')) {
+          $(".warningReady").show();
+        } else {
+          paper.project.remove();
+          even = 0;
+          if (e.which == 77){
+            response = 1;
+            if (RL == "1"){ $("#Correct").show(); } else { $("#Incorrect").show(); }
+          } else {
+            response = -1;
+            if (RL == "-1"){ $("#Correct").show(); } else { $("#Incorrect").show(); }
+          }
+          $("#coherence").html(coherence);
+          var RLword = "Left";
+          console.log(RLword);
+          if (RL == -1) { RLword = "Left" } else { RLword = "Left" };
+          console.log(RLword);
+          $("#RightL").html(RLword)
+          var endTime = (new Date()).getTime();
+          RT = endTime - startTime;
+          $("#RT").html(RT);
+          setTimeout(RDM,1000);
+        }
+      }
+      if (RL == response){
+        trialdata = [RL, coherence, RT];
+        data.push(trialdata);
+      }
+    });
+  $(document).on('keydown', function(e){
+    if (e.which == 68){
+    var dataJSON = JSON.stringify(data);
+    var textToSaveAsBlob = new Blob([dataJSON], {type:"text/plain"});
+    var textToSaveAsURL = window.URL.createObjectURL(textToSaveAsBlob);
+    var downloadLink = document.createElement("a");
+    downloadLink.download = "text";
+    downloadLink.innerHTML = "Download File";
+    downloadLink.href = textToSaveAsURL;
+    downloadLink.onclick = destroyClickedElement;
+    downloadLink.style.display = "none";
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+  }
+});
+function destroyClickedElement(event)
+{
+    document.body.removeChild(event.target);
+} 
+</script>
+</head>
+
+<body>
+  <div class = "container">
+    <h1 align="center">Random Dot Motion Task</h1>
+    <div id="Instructions" align="center">
+    Your task is to determine if the dots on the screen are moving to the left or to the right. <br> To begin the trial, press the Ready button. To indicate that the dots are moving to the right, press the 'M' key, and to indicate that dots are moving to the left, press the 'Z' key. <br> 
+    <br><p>
+    Kindly enter the following details and press the submit button to proceed to the experiment.
+    </p></div>
+    <div id="details" align="center">
+        <p class="name"> 
+          <label for="name">Name</label><br> 
+            <input type="text" id="name" /> 
+        </p>
+        <p class="email"> 
+          <label for="email">E-mail ID</label><br>
+            <input type="text" id="email" /> 
+        </p> 
+        <p class="web"> 
+           <label for="contact">Contact Number</label><br>
+            <input type="text" id="contact" /> 
+        </p>
+    </div>
+    <div align="center">
+      <button type = "button" id = "StartTrial" onclick="BeginDemo();">
+        <span id = "StartTrial">
+          Start Trial
+        </span>
+      </button>
+    </div> 
+    <p class = "logo">
+      <canvas class="StimElement" id="Canvas" width = "900" height = "650" align="center" style="background:white"></canvas>
+    </p>
+    <div align="center">
+      <button type = "button" id = "ready" onclick="BeginDemo();">
+        <span id = "ready">
+          Ready
+        </span>
+      </button>
+    </div> 
+    <div align="center" id = "Correct" class = "response"> 
+      <p><h3 style = "color: #00e600;">
+        Correct!
+      </h3></p>
+    </div>
+    <div align="center" id = "Incorrect" class = "response"> 
+      <p><h3 style = "color: #e60000;">
+        Incorrect
+      </h3></p>
+    </div>
+</body>
+</html>
